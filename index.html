@@ -1,16 +1,77 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>Ruleta Flanes</title>
+
 <style>
-body{font-family:Arial;background:#fff5e6;text-align:center;padding:20px}
-canvas{max-width:300px}.pointer{font-size:40px}.btn{padding:12px 24px;font-size:18px}
-#result{display:none;margin-top:20px;padding:12px;border:2px dashed #4caf50;background:#eef}
-</style></head><body>
-<h2>🍮 ¡Gira la ruleta!</h2><div class="pointer">⬇️</div>
-<canvas id="wheel" width="300" height="300"></canvas><br>
+body{
+    font-family:Arial;
+    background:#fff5e6;
+    text-align:center;
+    padding:20px;
+}
+
+h2{
+    color:#8d4b20;
+}
+
+canvas{
+    max-width:300px;
+    border-radius:50%;
+    border:8px solid #8d4b20;
+    box-shadow:0 0 15px #aaa;
+}
+
+.pointer{
+    font-size:45px;
+}
+
+.btn{
+    padding:12px 30px;
+    font-size:18px;
+    background:#ff9800;
+    color:white;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.btn:hover{
+    background:#f57c00;
+}
+
+#result{
+    display:none;
+    margin-top:20px;
+    padding:15px;
+    border:2px dashed #4caf50;
+    background:#eef;
+    border-radius:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>🍮 ¡Gira la ruleta!</h2>
+
+<div class="pointer">⬇️</div>
+
+<canvas id="wheel" width="300" height="300"></canvas>
+
+<br><br>
+
 <button id="spin" class="btn">GIRAR</button>
+
 <div id="result"></div>
+
+
 <script>
+
 const sectors=[
 {text:"SIGUE PARTICIPANDO",c:"#ddd",w:50},
 {text:"10% DESC.",c:"#ffe082",w:25},
@@ -19,30 +80,173 @@ const sectors=[
 {text:"50% DESC.",c:"#ffb74d",w:2},
 {text:"FLAN GRATIS",c:"#ff8a65",w:1}
 ];
-const cv=document.getElementById("wheel"),ctx=cv.getContext("2d");
-const arc=2*Math.PI/sectors.length;
-function draw(){for(let i=0;i<sectors.length;i++){ctx.beginPath();ctx.moveTo(150,150);ctx.fillStyle=sectors[i].c;ctx.arc(150,150,140,i*arc,(i+1)*arc);ctx.fill();ctx.save();ctx.translate(150,150);ctx.rotate(i*arc+arc/2);ctx.fillStyle="#000";ctx.textAlign="right";ctx.font="bold 12px Arial";ctx.fillText(sectors[i].text,125,5);ctx.restore();}}
-draw();
-const key="flanPremio";
-if(localStorage.getItem(key)){mostrar(JSON.parse(localStorage.getItem(key)));document.getElementById("spin").style.display="none";}
-function elegir(){let r=Math.random()*100,s=0;for(let p of sectors){s+=p.w;if(r<s)return p;}}
-document.getElementById("spin").onclick=()=>{
- if(localStorage.getItem(key))return;
- let p=elegir(),idx=sectors.indexOf(p);
- cv.style.transition="transform 4s ease";
- cv.style.transform=`rotate(${1800-idx*60}deg)`;
- setTimeout(()=>{
-   let code="FLAN-"+Math.random().toString(36).substring(2,6).toUpperCase()+"-"+Date.now().toString().slice(-4);
-   let data={premio:p.text,codigo:code,fecha:new Date().toLocaleString()};
-   localStorage.setItem(key,JSON.stringify(data));
-   mostrar(data);
-   document.getElementById("spin").style.display="none";
- },4000);
-};
-function mostrar(d){
- let r=document.getElementById("result");
- r.style.display="block";
- r.innerHTML="<h3>"+d.premio+"</h3><p><b>Código:</b> "+d.codigo+
- "<br><b>Fecha:</b> "+d.fecha+"</p><small>Este dispositivo ya utilizó su oportunidad.</small>";
+
+
+const cv=document.getElementById("wheel");
+const ctx=cv.getContext("2d");
+
+
+// Dibujar ruleta con tamaños reales
+function draw(){
+
+let start=0;
+
+for(let s of sectors){
+
+let angle=(s.w/100)*Math.PI*2;
+
+
+ctx.beginPath();
+ctx.moveTo(150,150);
+ctx.fillStyle=s.c;
+ctx.arc(150,150,140,start,start+angle);
+ctx.fill();
+
+
+ctx.save();
+ctx.translate(150,150);
+ctx.rotate(start+angle/2);
+ctx.fillStyle="#000";
+ctx.textAlign="right";
+ctx.font="bold 11px Arial";
+ctx.fillText(s.text,130,5);
+ctx.restore();
+
+
+start+=angle;
+
 }
-</script></body></html>
+
+}
+
+draw();
+
+
+
+const key="flanPremio";
+
+
+if(localStorage.getItem(key)){
+
+mostrar(JSON.parse(localStorage.getItem(key)));
+document.getElementById("spin").style.display="none";
+
+}
+
+
+
+// Elegir premio según porcentaje
+
+function elegir(){
+
+let r=Math.random()*100;
+let suma=0;
+
+for(let p of sectors){
+
+suma+=p.w;
+
+if(r<suma)
+return p;
+
+}
+
+}
+
+
+
+// Girar
+
+document.getElementById("spin").onclick=()=>{
+
+
+if(localStorage.getItem(key))
+return;
+
+
+let p=elegir();
+
+
+// calcular posición del premio
+
+let posicion=0;
+
+for(let s of sectors){
+
+if(s===p)
+break;
+
+posicion+=(s.w/100)*360;
+
+}
+
+
+let centro=posicion+(p.w/100*360)/2;
+
+
+
+cv.style.transition="transform 4s ease";
+
+cv.style.transform=
+`rotate(${1800-centro}deg)`;
+
+
+
+setTimeout(()=>{
+
+
+let code=
+"FLAN-"+
+Math.random().toString(36).substring(2,6).toUpperCase()
++"-"+
+Date.now().toString().slice(-4);
+
+
+
+let data={
+premio:p.text,
+codigo:code,
+fecha:new Date().toLocaleString()
+};
+
+
+
+localStorage.setItem(key,JSON.stringify(data));
+
+mostrar(data);
+
+
+document.getElementById("spin").style.display="none";
+
+
+},4000);
+
+
+};
+
+
+
+
+
+function mostrar(d){
+
+let r=document.getElementById("result");
+
+r.style.display="block";
+
+
+r.innerHTML=
+"<h3>"+d.premio+"</h3>"+
+"<p><b>Código:</b> "+d.codigo+
+"<br><b>Fecha:</b> "+d.fecha+
+"</p>"+
+"<small>Este dispositivo ya utilizó su oportunidad.</small>";
+
+}
+
+
+</script>
+
+
+</body>
+</html>
