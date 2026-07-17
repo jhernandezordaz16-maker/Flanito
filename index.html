@@ -60,7 +60,7 @@ canvas{
 </head>
 <body>
 
-<h2>制作 ¡Gira la ruleta! </h2>
+<h2>🍮 ¡Gira la ruleta!</h2>
 
 <div class="pointer">⬇️</div>
 
@@ -85,13 +85,11 @@ const sectors=[
 const cv=document.getElementById("wheel");
 const ctx=cv.getContext("2d");
 
-// Dibujar ruleta respetando los porcentajes y mejorando la lectura del texto
 function draw(){
     let start = 0;
     for(let s of sectors){
         let angle = (s.w / 100) * Math.PI * 2;
 
-        // Dibujar rebanada
         ctx.beginPath();
         ctx.moveTo(150,150);
         ctx.fillStyle=s.c;
@@ -101,16 +99,13 @@ function draw(){
         ctx.strokeStyle = "#fff";
         ctx.stroke();
 
-        // Dibujar Texto centrado y rotado elegantemente
         ctx.save();
         ctx.translate(150,150);
-        // Rotar al centro exacto de la rebanada actual
         ctx.rotate(start + angle / 2);
         ctx.fillStyle="#000";
         ctx.textAlign="right";
         ctx.textBaseline="middle";
         
-        // Si el texto es muy largo y la rebanada es chica, encogemos la letra para que no se salga
         if(s.w < 5) {
             ctx.font="bold 8px Arial";
         } else if(s.w < 10) {
@@ -135,7 +130,6 @@ if(localStorage.getItem(key)){
     document.getElementById("spin").style.display="none";
 }
 
-// Elegir premio según porcentaje
 function elegir(){
     let r=Math.random()*100;
     let suma=0;
@@ -145,13 +139,11 @@ function elegir(){
     }
 }
 
-// Girar
 document.getElementById("spin").onclick=()=>{
     if(localStorage.getItem(key)) return;
 
     let p=elegir();
 
-    // Calcular la posición angular acumulada en grados
     let posicionAcumuladaGrados = 0;
     for(let s of sectors){
         if(s===p) break;
@@ -161,12 +153,7 @@ document.getElementById("spin").onclick=()=>{
     let arcoPremioGrados = (p.w / 100) * 360;
     let centroPremioGrados = posicionAcumuladaGrados + (arcoPremioGrados / 2);
 
-    // En Canvas, 0 grados está a la derecha (3 en punto). 
-    // La flecha está arriba (12 en punto), lo que equivale a 270 grados.
-    // Para que el centro del premio se alinee con los 270 grados, calculamos el desfase:
     let anguloDestino = 270 - centroPremioGrados;
-    
-    // Le sumamos 5 vueltas completas (1800 grados) para el efecto visual de velocidad
     let gradosTotalesAGirar = 1800 + anguloDestino;
 
     cv.style.transition="transform 4s cubic-bezier(0.15, 0.85, 0.35, 1)";
@@ -190,12 +177,27 @@ document.getElementById("spin").onclick=()=>{
 function mostrar(d){
     let r=document.getElementById("result");
     r.style.display="block";
-    r.innerHTML=
-    "<h3>🎉 ¡Ganaste: "+d.premio+"! 🎉</h3>"+
-    "<p><b>Código:</b> "+d.codigo+
-    "<br><b>Fecha:</b> "+d.fecha+
-    "</p>"+
-    "<small>Este dispositivo ya utilizó su oportunidad.</small>";
+    
+    // Validar si es la opción sin premio
+    if(d.premio === "SIGUE PARTICIPANDO") {
+        r.style.borderColor = "#c62828"; // Borde rojo tenue para la derrota
+        r.style.background = "#ffebee";
+        r.innerHTML=
+        "<h3>😢 Lo sentimos, sigue participando 😢</h3>"+
+        "<p><b>Código:</b> "+d.codigo+
+        "<br><b>Fecha:</b> "+d.fecha+
+        "</p>"+
+        "<small>Este dispositivo ya utilizó su oportunidad.</small>";
+    } else {
+        r.style.borderColor = "#4caf50"; // Verde para los ganadores
+        r.style.background = "#eef";
+        r.innerHTML=
+        "<h3>🎉 ¡Ganaste: "+d.premio+"! 🎉</h3>"+
+        "<p><b>Código:</b> "+d.codigo+
+        "<br><b>Fecha:</b> "+d.fecha+
+        "</p>"+
+        "<small>Este dispositivo ya utilizó su oportunidad.</small>";
+    }
 }
 </script>
 
