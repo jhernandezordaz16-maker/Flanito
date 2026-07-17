@@ -73,10 +73,11 @@ canvas{
 <div id="result"></div>
 
 <script>
+// Mantenemos los sectores ordenados. 'w' es la probabilidad real oculta.
 const sectors=[
-    {text:"SIGUE PARTICIPANDO",c:"#ddd",w:50},
-    {text:"10% DESC.",c:"#ffe082",w:25},
-    {text:"15% DESC.",c:"#ffd54f",w:15},
+    {text:"SIGUE PARTICIPANDO",c:"#ddd",w:15},
+    {text:"10% DESC.",c:"#ffe082",w:50},
+    {text:"15% DESC.",c:"#ffd54f",w:25},
     {text:"20% DESC.",c:"#ffca28",w:7},
     {text:"50% DESC.",c:"#ffb74d",w:2},
     {text:"FLAN GRATIS",c:"#ff8a65",w:1}
@@ -85,39 +86,35 @@ const sectors=[
 const cv=document.getElementById("wheel");
 const ctx=cv.getContext("2d");
 
+// Ahora dibujamos rebanadas EXACTAMENTE IGUALES (360 grados / 6 sectores = 60 grados cada una)
+const numSectors = sectors.length;
+const equalAngle = (Math.PI * 2) / numSectors;
+
 function draw(){
     let start = 0;
     for(let s of sectors){
-        let angle = (s.w / 100) * Math.PI * 2;
-
+        // Dibujar rebanada equitativa
         ctx.beginPath();
         ctx.moveTo(150,150);
         ctx.fillStyle=s.c;
-        ctx.arc(150,150,140,start,start+angle);
+        ctx.arc(150,150,140,start,start+equalAngle);
         ctx.fill();
         ctx.lineWidth = 1;
         ctx.strokeStyle = "#fff";
         ctx.stroke();
 
+        // Dibujar Texto centrado
         ctx.save();
         ctx.translate(150,150);
-        ctx.rotate(start + angle / 2);
+        ctx.rotate(start + equalAngle / 2);
         ctx.fillStyle="#000";
         ctx.textAlign="right";
         ctx.textBaseline="middle";
-        
-        if(s.w < 5) {
-            ctx.font="bold 8px Arial";
-        } else if(s.w < 10) {
-            ctx.font="bold 9px Arial";
-        } else {
-            ctx.font="bold 11px Arial";
-        }
-        
+        ctx.font="bold 11px Arial"; // Al ser iguales, ya no se encogen las letras
         ctx.fillText(s.text, 135, 0);
         ctx.restore();
 
-        start += angle;
+        start += equalAngle;
     }
 }
 
@@ -130,6 +127,7 @@ if(localStorage.getItem(key)){
     document.getElementById("spin").style.display="none";
 }
 
+// Elegir premio según el porcentaje real oculto (w)
 function elegir(){
     let r=Math.random()*100;
     let suma=0;
@@ -144,15 +142,14 @@ document.getElementById("spin").onclick=()=>{
 
     let p=elegir();
 
-    let posicionAcumuladaGrados = 0;
-    for(let s of sectors){
-        if(s===p) break;
-        posicionAcumuladaGrados += (s.w / 100) * 360;
-    }
+    // Encontrar la posición visual del premio basada en sectores de igual tamaño
+    let indexPremio = sectors.indexOf(p);
+    
+    // Cada sector mide exactamente 60 grados en una ruleta de 6 partes
+    let arcoPremioGrados = 360 / numSectors; 
+    let centroPremioGrados = (indexPremio * arcoPremioGrados) + (arcoPremioGrados / 2);
 
-    let arcoPremioGrados = (p.w / 100) * 360;
-    let centroPremioGrados = posicionAcumuladaGrados + (arcoPremioGrados / 2);
-
+    // Ajustamos para que frene exactamente apuntando a la flecha superior (270°)
     let anguloDestino = 270 - centroPremioGrados;
     let gradosTotalesAGirar = 1800 + anguloDestino;
 
@@ -178,9 +175,8 @@ function mostrar(d){
     let r=document.getElementById("result");
     r.style.display="block";
     
-    // Validar si es la opción sin premio
     if(d.premio === "SIGUE PARTICIPANDO") {
-        r.style.borderColor = "#c62828"; // Borde rojo tenue para la derrota
+        r.style.borderColor = "#c62828";
         r.style.background = "#ffebee";
         r.innerHTML=
         "<h3>😢 Lo sentimos, sigue participando 😢</h3>"+
@@ -189,7 +185,7 @@ function mostrar(d){
         "</p>"+
         "<small>Este dispositivo ya utilizó su oportunidad.</small>";
     } else {
-        r.style.borderColor = "#4caf50"; // Verde para los ganadores
+        r.style.borderColor = "#4caf50";
         r.style.background = "#eef";
         r.innerHTML=
         "<h3>🎉 ¡Ganaste: "+d.premio+"! 🎉</h3>"+
